@@ -625,6 +625,15 @@ run_macos() {
 		printf '(allow file-write* (subpath "%s/Library/Logs"))\n' "$(policy_quote "$HOME")"
 		printf '(allow file-write* (subpath "%s/Library/Application Support"))\n' "$(policy_quote "$HOME")"
 
+		# 5b. Keychain read access in safe mode
+		# Safe mode denies all reads under $HOME, which blocks Keychain access
+		# and breaks authentication. Keychain entries are still ACL-protected
+		# per-entry by securityd, so file-level reads don't expose secrets.
+		if [[ "$safe_mode" == true ]]; then
+			printf '(allow file-read* (subpath "%s/Library/Keychains"))\n' "$(policy_quote "$HOME")"
+			printf '(allow file-read* (subpath "/Library/Keychains"))\n'
+		fi
+
 		# 6. Keychain access for OAuth token refresh (only if explicitly allowed)
 		if [[ "$allow_keychain" == true ]]; then
 			printf '(allow file-read* (subpath "%s/Library/Keychains"))\n' "$(policy_quote "$HOME")"
